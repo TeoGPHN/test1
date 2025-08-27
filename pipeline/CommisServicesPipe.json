@@ -1,0 +1,33 @@
+{
+	"name": "CommisServicesPipe",
+	"properties": {
+		"activities": [
+			{
+				"name": "CreateData",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_Commissioned_Services_Report_GPHN_V2]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "COMMISSIONED_SERVICES"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-07-23T04:19:20Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

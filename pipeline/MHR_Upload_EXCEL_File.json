@@ -1,0 +1,303 @@
+{
+	"name": "MHR_Upload_EXCEL_File",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get worksheet names",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureTableSource",
+						"azureTableSourceIgnoreTableNotFound": false
+					},
+					"dataset": {
+						"referenceName": "ds_Table_MHRWorksheets",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Create CSV files",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get worksheet names",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get worksheet names').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "If_Worksheet_Name",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().Worksheet,'Usage')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Copy to CSV_Registrations",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "ExcelSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": true,
+													"enablePartitionDiscovery": false
+												}
+											},
+											"sink": {
+												"type": "DelimitedTextSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
+												},
+												"formatSettings": {
+													"type": "DelimitedTextWriteSettings",
+													"quoteAllText": true,
+													"fileExtension": ".txt"
+												}
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_EXCEL_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@pipeline().parameters.PL_FileName",
+														"type": "Expression"
+													},
+													"ds_P_SheetName": {
+														"value": "@item().Worksheet",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_CSV_Sink",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "MHR_Registrations.csv",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Create MHR_Usage csv",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "ExcelSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": true,
+													"enablePartitionDiscovery": false
+												}
+											},
+											"sink": {
+												"type": "DelimitedTextSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
+												},
+												"formatSettings": {
+													"type": "DelimitedTextWriteSettings",
+													"quoteAllText": true,
+													"fileExtension": ".txt"
+												}
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_EXCEL_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@pipeline().parameters.PL_FileName",
+														"type": "Expression"
+													},
+													"ds_P_SheetName": {
+														"value": "@item().Worksheet",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_CSV_Sink",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "MHR_Usage.csv",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Upload CSV to STAGING",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Create CSV files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PHI_STAGING_GENERIC_PIPE",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PL_Start_DIRECTORY": {
+							"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'CSV/')",
+							"type": "Expression"
+						},
+						"PL_Sink_SCHEMA": "STAGING"
+					}
+				}
+			},
+			{
+				"name": "Create_MHR_DigitalHealth_Files",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Upload CSV to STAGING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_MHR_DigitalHealth_Files]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/MHR/"
+			},
+			"PL_FileName": {
+				"type": "string",
+				"defaultValue": "MHR Provider Reg and Use.xlsx"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "GPHN"
+			}
+		},
+		"folder": {
+			"name": "MHR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-06-11T03:38:03Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

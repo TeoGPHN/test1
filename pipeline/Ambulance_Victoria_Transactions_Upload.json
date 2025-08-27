@@ -1,0 +1,286 @@
+{
+	"name": "Ambulance_Victoria_Transactions_Upload",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Transaction File Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Transaction File Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Transaction File Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy_AV_to_Renamed_CSV",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ExcelSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_EXCEL_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": "@pipeline().parameters.PL_Start_DIRECTORY",
+										"ds_P_FileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"ds_P_SheetName": "Sheet1"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_CSV_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@concat(pipeline().parameters.PL_Temp_DIRECTORY)",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "AV_vphn_transactional_data.csv",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete TEMP Files",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Copy STAGING to PRODUCTION",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_GetMetadata",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_StartDirectory": {
+											"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Copy STAGING to PRODUCTION",
+							"description": "[dbo].[PHI_TRANSFER_FROM_STAGING_UPDATE]",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "PHI_STAGING_GENERIC_PIPE",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[GPHN].[UPDATE_AV_PROD]",
+								"storedProcedureParameters": {
+									"IN_PIPE_NAME": {
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IN_RUN_ID": {
+										"value": {
+											"value": "@activity('PHI_STAGING_GENERIC_PIPE').output.pipelineRunId\n\n",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"IN_DESTINATION_SCHEMA": {
+										"value": {
+											"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "gphn_dw_prod_gpserverless",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "PHI_STAGING_GENERIC_PIPE",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Copy_AV_to_Renamed_CSV",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PHI_STAGING_GENERIC_PIPE",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"PL_Start_DIRECTORY": {
+										"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+										"type": "Expression"
+									},
+									"PL_Sink_SCHEMA": "STAGING"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/AMBULANCE_VICTORIA/TRANSACTION/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "GPHN"
+			},
+			"PL_Temp_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/AMBULANCE_VICTORIA/TEMP/"
+			},
+			"PL_Location_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/AMBULANCE_VICTORIA/LOCATION/"
+			}
+		},
+		"variables": {
+			"PL_VAR_JSON": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "AMBULANCE VICTORIA"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-07-21T05:47:40Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

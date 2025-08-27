@@ -1,0 +1,39 @@
+{
+	"name": "ds_UNZIP_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_gphndlprod001",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_FolderName": {
+				"type": "String"
+			},
+			"ds_P_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_ADSL_PROD001"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().ds_P_FileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().ds_P_FolderName",
+					"type": "Expression"
+				}
+			},
+			"compression": {
+				"type": "ZipDeflate"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

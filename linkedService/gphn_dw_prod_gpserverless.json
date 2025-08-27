@@ -1,0 +1,19 @@
+{
+	"name": "gphn_dw_prod_gpserverless",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "gphn-dbserver-prod-sqlserver.database.windows.net",
+			"database": "gphn-dw-prod-gpserverless",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SystemAssignedManagedIdentity"
+		},
+		"connectVia": {
+			"referenceName": "SelfHostedIntegrationRuntime-Azure-VNET",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

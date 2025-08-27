@@ -1,0 +1,19 @@
+{
+	"name": "ds_Table_StrategicWorksheets",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureTableStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Common"
+		},
+		"annotations": [],
+		"type": "AzureTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "StrategicWorksheets"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

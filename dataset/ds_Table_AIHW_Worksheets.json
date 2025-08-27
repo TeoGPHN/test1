@@ -1,0 +1,19 @@
+{
+	"name": "ds_Table_AIHW_Worksheets",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureTableStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "AIHW"
+		},
+		"annotations": [],
+		"type": "AzureTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "AIHWWorksheets"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

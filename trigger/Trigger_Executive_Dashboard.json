@@ -1,0 +1,25 @@
+{
+	"name": "Trigger_Executive_Dashboard",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Strategic_Pipe",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/bronze/blobs/",
+			"blobPathEndsWith": "/STRATEGIC_DASHBOARD/Raw Data 2024-25 Strategic Dashboard Report Q1 24-25.XLSX",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

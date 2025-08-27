@@ -1,0 +1,1216 @@
+{
+	"name": "VAHI_CSV_Upload",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata_ZIP",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach csv unzip",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Delete VAHI_TEMP Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata_ZIP').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Unzip File",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "BinarySource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"deleteFilesAfterCompletion": false
+									},
+									"formatSettings": {
+										"type": "BinaryReadSettings",
+										"compressionProperties": {
+											"type": "ZipDeflateReadSettings",
+											"preserveZipFileNameAsFolder": true
+										}
+									}
+								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"copyBehavior": "PreserveHierarchy"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_BIN_UNZIP_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_FolderFileName": {
+											"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_BIN_UNZIP_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_FolderName": {
+											"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Delete VAHI_TEMP Files",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata_ZIP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach CSV create table in staging",
+				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get CSV Files').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Switch_to_write_Tablename",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@replace(item().name, '.csv', '')",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "CHMDS_2023-24",
+										"activities": [
+											{
+												"name": "Copy Files to STAGING CHMDS table",
+												"description": "",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": false,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBatchSize": 250000,
+														"writeBatchTimeout": "20:00:00",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": true,
+														"tableOption": "autoCreate",
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_CSV_Source",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_DB_PHI_STAGING",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_TableName": {
+																"value": "DSA_PHN_CHMDS",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "VAED_2023-24",
+										"activities": [
+											{
+												"name": "Copy Files to STAGING VAED table",
+												"description": "add a column to episodes table",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": false,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBatchSize": 250000,
+														"writeBatchTimeout": "20:00:00",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": true,
+														"tableOption": "autoCreate",
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_CSV_Source",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_DB_PHI_STAGING",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_TableName": {
+																"value": "DSA_PHN_VAED",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									}
+								],
+								"defaultActivities": [
+									{
+										"name": "Copy Files to STAGING VEMD table",
+										"description": "",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBatchSize": 250000,
+												"writeBatchTimeout": "20:00:00",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": true,
+												"tableOption": "autoCreate",
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": {
+														"value": "DSA_PHN_VEMD",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Get CSV Files",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "ForEach csv unzip",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Store File Metadata",
+				"description": "Stores file names in the DB and deletes any existing similar STAGING tables",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get Renamed CSV Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_Store_COPY_FILES]",
+					"storedProcedureParameters": {
+						"IN_DESTINATION_SCHEMA": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA\r\n",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_JSON_STRING": {
+							"value": {
+								"value": "@string(activity('Get Renamed CSV Files').output.childItems)",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Copy VEAD and VEMD to PRODUCTION",
+				"description": "copy and process VAED and VEMD tables to production",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "ForEach CSV create table in staging",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_DSA_PHN_VAED&VEMD]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Copy STAGING to PRODUCTION",
+				"description": "[dbo].[PHI_TRANSFER_FROM_STAGING]",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Copy VEAD and VEMD to PRODUCTION",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_TRANSFER_FROM_STAGING]",
+					"storedProcedureParameters": {
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_SINK_SCHEMA": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get CSV Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get CSV Files').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Switch_to_Rename_CSV",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@replace(item().name, '.csv', '')",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "CHMDS_2023-24",
+										"activities": [
+											{
+												"name": "Copy with table name CHMDS",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_CSV_Source",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_CSV_Sink",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Renamed_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": "DSA_PHN_CHMDS.csv"
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "VAED_2023-24",
+										"activities": [
+											{
+												"name": "Copy with table name VAED",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_CSV_Source",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": {
+																"value": "@item().name",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_CSV_Sink",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Renamed_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": "DSA_PHN_VAED.csv"
+														}
+													}
+												]
+											}
+										]
+									}
+								],
+								"defaultActivities": [
+									{
+										"name": "Copy with table name VEMD",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "DelimitedTextSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
+												},
+												"formatSettings": {
+													"type": "DelimitedTextWriteSettings",
+													"quoteAllText": true,
+													"fileExtension": ".txt"
+												}
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_CSV_Sink",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Renamed_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "DSA_PHN_VEMD.csv",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Get Renamed CSV Files",
+				"description": "",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "ForEach1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Renamed_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1_CSV_to_Staging",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Store File Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Renamed CSV Files').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "If Condition1",
+							"description": "check the file name to run stored procedure.",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().name,'DSA_PHN_CHMDS.csv')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Copy VEAD and VEMD to PRODUCTION_copy1_copy1",
+										"description": "copy and process VAED and VEMD tables to production",
+										"type": "SqlServerStoredProcedure",
+										"state": "Inactive",
+										"onInactiveMarkAs": "Succeeded",
+										"dependsOn": [
+											{
+												"activity": "Copy CSV to STAGING_copy1",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[GPHN].[Create_DSA_PHN_VAED&VEMD]"
+										},
+										"linkedServiceName": {
+											"referenceName": "gphn_dw_prod_gpserverless",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "Copy CSV to STAGING_copy1",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": false,
+												"tableOption": "autoCreate",
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Renamed_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": "@replace(item().name, '.csv', '')"
+												}
+											}
+										]
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Copy CSV to STAGING",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": false,
+												"tableOption": "autoCreate",
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Renamed_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": "@replace(item().name, '.csv', '')"
+												}
+											}
+										]
+									},
+									{
+										"name": "Copy STAGING to PRODUCTION_copy1",
+										"description": "[dbo].[PHI_TRANSFER_FROM_STAGING]",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [
+											{
+												"activity": "Copy CSV to STAGING",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[dbo].[PHI_TRANSFER_FROM_STAGING]",
+											"storedProcedureParameters": {
+												"IN_PIPE_NAME": {
+													"value": {
+														"value": "@pipeline().Pipeline",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"IN_RUN_ID": {
+													"value": {
+														"value": "@pipeline().RunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"IN_SINK_SCHEMA": {
+													"value": {
+														"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+														"type": "Expression"
+													},
+													"type": "String"
+												}
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "gphn_dw_prod_gpserverless",
+											"type": "LinkedServiceReference"
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/VAHI/VAHI_Files/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "GPHN"
+			},
+			"PL_Dataset_PREFIX": {
+				"type": "string",
+				"defaultValue": "DSA_PHN"
+			},
+			"PL_Temp_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/VAHI/VAHI_TEMP"
+			},
+			"PL_Renamed_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/VAHI/VAHI_Renamed"
+			}
+		},
+		"folder": {
+			"name": "SUDEN"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-17T22:04:16Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

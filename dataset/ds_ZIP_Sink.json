@@ -1,0 +1,42 @@
+{
+	"name": "ds_ZIP_Sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_gphndlprod001",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_DirectoryName": {
+				"type": "string"
+			},
+			"ds_P_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_ADSL_PROD001"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().ds_P_FileName",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().ds_P_DirectoryName",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"compressionCodec": "ZipDeflate",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

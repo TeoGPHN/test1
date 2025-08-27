@@ -1,0 +1,39 @@
+{
+	"name": "ds_POLAR_ZIP_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_gphnpolarprod",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_FolderName": {
+				"type": "String"
+			},
+			"ds_P_FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_ADLS_POLAR_PROD"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().ds_P_FileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().ds_P_FolderName",
+					"type": "Expression"
+				}
+			},
+			"compression": {
+				"type": "ZipDeflate"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

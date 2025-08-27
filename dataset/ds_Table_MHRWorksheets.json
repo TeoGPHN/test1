@@ -1,0 +1,19 @@
+{
+	"name": "ds_Table_MHRWorksheets",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureTableStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Common"
+		},
+		"annotations": [],
+		"type": "AzureTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "MHRWorksheet"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

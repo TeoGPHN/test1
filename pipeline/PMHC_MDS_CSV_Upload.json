@@ -1,0 +1,1146 @@
+{
+	"name": "PMHC_MDS_CSV_Upload",
+	"properties": {
+		"activities": [
+			{
+				"name": "File copy to STAGING",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Store File Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get PMHC_MDS Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Switch1",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@replace(item().name, '.csv', '')",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "episodes",
+										"activities": [
+											{
+												"name": "Copy EPISODE file",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": false,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings",
+															"skipLineCount": 1
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBatchSize": 250000,
+														"writeBatchTimeout": "20:00:00",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": true,
+														"tableOption": "autoCreate",
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"mappings": [
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 1
+																},
+																"sink": {
+																	"name": "organisation_path",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 2
+																},
+																"sink": {
+																	"name": "episode_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 3
+																},
+																"sink": {
+																	"name": "client_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 4
+																},
+																"sink": {
+																	"name": "episode_end_date",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 5
+																},
+																"sink": {
+																	"name": "client_consent",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 6
+																},
+																"sink": {
+																	"name": "episode_completion_status",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 7
+																},
+																"sink": {
+																	"name": "referral_date",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 8
+																},
+																"sink": {
+																	"name": "referral_date1",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 9
+																},
+																"sink": {
+																	"name": "program_type",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 10
+																},
+																"sink": {
+																	"name": "principal_focus",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 11
+																},
+																"sink": {
+																	"name": "mental_health_treatment_plan",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 12
+																},
+																"sink": {
+																	"name": "homelessness",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 13
+																},
+																"sink": {
+																	"name": "client_postcode",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 14
+																},
+																"sink": {
+																	"name": "labour_force_status",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 15
+																},
+																"sink": {
+																	"name": "employment_participation",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 16
+																},
+																"sink": {
+																	"name": "income_source",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 17
+																},
+																"sink": {
+																	"name": "health_care_card",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 18
+																},
+																"sink": {
+																	"name": "ndis_participant",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 19
+																},
+																"sink": {
+																	"name": "marital_status",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 20
+																},
+																"sink": {
+																	"name": "suicide_referral_flag",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 21
+																},
+																"sink": {
+																	"name": "principal_diagnosis",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 22
+																},
+																"sink": {
+																	"name": "additional_diagnosis",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 23
+																},
+																"sink": {
+																	"name": "medication_antipsychotics",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 24
+																},
+																"sink": {
+																	"name": "medication_anxiolytics",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 25
+																},
+																"sink": {
+																	"name": "medication_hypnotics",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 26
+																},
+																"sink": {
+																	"name": "medication_antidepressants",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 27
+																},
+																"sink": {
+																	"name": "medication_psychostimulants",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 28
+																},
+																"sink": {
+																	"name": "referrer_profession",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 29
+																},
+																"sink": {
+																	"name": "referrer_organisation_type",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 30
+																},
+																"sink": {
+																	"name": "organisation_type_referred_to_at_episode_conclusion",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 31
+																},
+																"sink": {
+																	"name": "continuity_of_support",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 32
+																},
+																"sink": {
+																	"name": "episode_tags",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															}
+														],
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_PMHC_EPISODE_file",
+														"type": "DatasetReference"
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_DB_PHI_STAGING",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_TableName": "@concat(pipeline().parameters.PL_Dataset_PREFIX,replace(item().name, '.csv', ''))"
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "service-contacts",
+										"activities": [
+											{
+												"name": "Copy SERVICE-CONTACTS file",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "DelimitedTextSource",
+														"storeSettings": {
+															"type": "AzureBlobFSReadSettings",
+															"recursive": false,
+															"enablePartitionDiscovery": false
+														},
+														"formatSettings": {
+															"type": "DelimitedTextReadSettings"
+														}
+													},
+													"sink": {
+														"type": "AzureSqlSink",
+														"writeBatchSize": 250000,
+														"writeBatchTimeout": "20:00:00",
+														"writeBehavior": "insert",
+														"sqlWriterUseTableLock": true,
+														"tableOption": "autoCreate",
+														"disableMetricsCollection": false
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"mappings": [
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 1
+																},
+																"sink": {
+																	"name": "organisation_path",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 2
+																},
+																"sink": {
+																	"name": "service_contact_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 3
+																},
+																"sink": {
+																	"name": "episode_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 4
+																},
+																"sink": {
+																	"name": "delivery_organisation_path",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 5
+																},
+																"sink": {
+																	"name": "practitioner_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 6
+																},
+																"sink": {
+																	"name": "service_contact_date",
+																	"type": "String",
+																	"physicalType": "varchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 7
+																},
+																"sink": {
+																	"name": "service_contact_type",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 8
+																},
+																"sink": {
+																	"name": "service_contact_postcode",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 9
+																},
+																"sink": {
+																	"name": "service_contact_modality",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 10
+																},
+																"sink": {
+																	"name": "service_contact_participants",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 11
+																},
+																"sink": {
+																	"name": "service_contact_venue",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 12
+																},
+																"sink": {
+																	"name": "service_contact_duration",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 13
+																},
+																"sink": {
+																	"name": "service_contact_copayment",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 14
+																},
+																"sink": {
+																	"name": "service_contact_participation_indicator",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 15
+																},
+																"sink": {
+																	"name": "service_contact_interpreter",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 16
+																},
+																"sink": {
+																	"name": "service_contact_no_show",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 17
+																},
+																"sink": {
+																	"name": "service_contact_final",
+																	"type": "Int32",
+																	"physicalType": "int"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 18
+																},
+																"sink": {
+																	"name": "service_contact_start_time",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 19
+																},
+																"sink": {
+																	"name": "funding_source",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 20
+																},
+																"sink": {
+																	"name": "funding_source1",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															},
+															{
+																"source": {
+																	"type": "String",
+																	"ordinal": 21
+																},
+																"sink": {
+																	"name": "service_contact_tags",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																}
+															}
+														],
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_PMHC_SERVICE_CONTACTS_file",
+														"type": "DatasetReference"
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_DB_PHI_STAGING",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_TableName": {
+																"value": "@concat(pipeline().parameters.PL_Dataset_PREFIX,replace(item().name, '.csv', ''))",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									}
+								],
+								"defaultActivities": [
+									{
+										"name": "Copy Files to STAGING normal",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBatchSize": 250000,
+												"writeBatchTimeout": "20:00:00",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": true,
+												"tableOption": "autoCreate",
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": {
+														"value": "@concat(pipeline().parameters.PL_Dataset_PREFIX,replace(item().name, '.csv', ''))",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Store File Metadata",
+				"description": "Stores file names in the DB and deletes any existing similar STAGING tables",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get PMHC_MDS Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_Store_COPY_FILES]",
+					"storedProcedureParameters": {
+						"IN_DESTINATION_SCHEMA": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_JSON_STRING": {
+							"value": {
+								"value": "@string(activity('Get PMHC_MDS Metadata').output.childItems)",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Copy STAGING to PRODUCTION",
+				"description": "[dbo].[PHI_TRANSFER_FROM_STAGING]",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "File copy to STAGING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "20:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_TRANSFER_FROM_STAGING]",
+					"storedProcedureParameters": {
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_SINK_SCHEMA": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get PMHC_MDS Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "PHI PMHC Collaboration",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy STAGING to PRODUCTION",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PHI_PMHC_Collaboration",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PL_Start_DIRECTORY": "bronze/PMHC_MDS/WA_PMHC_MDS/"
+					}
+				}
+			},
+			{
+				"name": "DELETE PMHC Staging records",
+				"description": "DELETE PMHC Staging records",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "PHI PMHC Collaboration",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "20:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_DELETE_STAGING_TABLES]",
+					"storedProcedureParameters": {
+						"IN_SCHEMA_NAME": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Delete PMHC CSV",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "DELETE PHI_PMHC Staging records",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "DELETE PHI_PMHC Staging records",
+				"description": "DELETE PMHC Staging records",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "DELETE PMHC Staging records",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "20:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_DELETE_CUSTOM_TABLES]",
+					"storedProcedureParameters": {
+						"CUSTOM_NAME": {
+							"value": "PHI_PMHC",
+							"type": "String"
+						},
+						"IN_SCHEMA_NAME": {
+							"value": "STAGING",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/PMHC_MDS/GPHN/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "PMHC"
+			},
+			"PL_Dataset_PREFIX": {
+				"type": "string",
+				"defaultValue": "PMHC_"
+			}
+		},
+		"folder": {
+			"name": "PMHC-MDS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-17T06:01:54Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

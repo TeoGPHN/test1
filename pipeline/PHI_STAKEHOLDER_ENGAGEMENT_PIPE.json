@@ -1,0 +1,75 @@
+{
+	"name": "PHI_STAKEHOLDER_ENGAGEMENT_PIPE",
+	"properties": {
+		"activities": [
+			{
+				"name": "Stored procedure1",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "PHI_STAGING_GENERIC_PIPE",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_StakeholderEngagement]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "PHI_STAGING_GENERIC_PIPE",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PHI_STAGING_GENERIC_PIPE",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PL_Start_DIRECTORY": "bronze/STAKEHOLDER_ENGAGEMENT/Folio_CSV/",
+						"PL_Sink_SCHEMA": "GPHN"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/STAKEHOLDER_ENGAGEMENT/Folio_CSV/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "GPHN"
+			}
+		},
+		"variables": {
+			"PL_VAR_JSON": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "SUDEN"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-24T00:04:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

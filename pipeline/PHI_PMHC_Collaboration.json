@@ -1,0 +1,827 @@
+{
+	"name": "PHI_PMHC_Collaboration",
+	"properties": {
+		"activities": [
+			{
+				"name": "Create STAGING tables",
+				"description": "Create STAGING temp tables ",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Delete TEMP Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "20:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[PMHC].[Create_PHI_PMHC_MDS]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get list of PHI PMHC tables",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Create STAGING tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT\t[source_schema]\n\t\t,[source_table]\nFROM\t[dbo].[vw_PHI_STAGING_Tables]\nWHERE\t[source_table] like 'PHI_PMHC_%' ",
+						"queryTimeout": "02:00:00",
+						"isolationLevel": "Snapshot",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_dw_prod_pgserverless",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach PHI PMHC table create csv",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get list of PHI PMHC tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get list of PHI PMHC tables').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Switch1",
+							"type": "Switch",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@item().source_table",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "PHI_PMHC_episodes",
+										"activities": [
+											{
+												"name": "Create EPISODES CSV file",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"mappings": [
+															{
+																"source": {
+																	"name": "organisation_path",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																},
+																"sink": {
+																	"name": "organisation_path",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "episode_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																},
+																"sink": {
+																	"name": "episode_key",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "client_key",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																},
+																"sink": {
+																	"name": "client_key",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "episode_end_date",
+																	"type": "String",
+																	"physicalType": "varchar"
+																},
+																"sink": {
+																	"name": "episode_end_date",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "client_consent",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "client_consent",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "episode_completion_status",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "episode_completion_status",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "referral_date",
+																	"type": "String",
+																	"physicalType": "varchar"
+																},
+																"sink": {
+																	"name": "referral_date",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "referral_date1",
+																	"type": "String",
+																	"physicalType": "varchar"
+																},
+																"sink": {
+																	"name": "referral_date1",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "program_type",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "program_type",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "principal_focus",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "principal_focus",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "mental_health_treatment_plan",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "mental_health_treatment_plan",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "homelessness",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "homelessness",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "client_postcode",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																},
+																"sink": {
+																	"name": "client_postcode",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "labour_force_status",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "labour_force_status",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "employment_participation",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "employment_participation",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "income_source",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "income_source",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "health_care_card",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "health_care_card",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "ndis_participant",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "ndis_participant",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "marital_status",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "marital_status",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "suicide_referral_flag",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "suicide_referral_flag",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "principal_diagnosis",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "principal_diagnosis",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "additional_diagnosis",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "additional_diagnosis",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "medication_antipsychotics",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "medication_antipsychotics",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "medication_anxiolytics",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "medication_anxiolytics",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "medication_hypnotics",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "medication_hypnotics",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "medication_antidepressants",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "medication_antidepressants",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "medication_psychostimulants",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "medication_psychostimulants",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "referrer_profession",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "referrer_profession",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "referrer_organisation_type",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "referrer_organisation_type",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "organisation_type_referred_to_at_episode_conclusion",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "organisation_type_referred_to_at_episode_conclusion",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "continuity_of_support",
+																	"type": "Int32",
+																	"physicalType": "int"
+																},
+																"sink": {
+																	"name": "continuity_of_support",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															},
+															{
+																"source": {
+																	"name": "episode_tags",
+																	"type": "String",
+																	"physicalType": "nvarchar"
+																},
+																"sink": {
+																	"name": "episode_tags",
+																	"type": "String",
+																	"physicalType": "String"
+																}
+															}
+														],
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_DB_PHI_STAGING",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_TableName": {
+																"value": "@item().source_table",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_CSV_Sink",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": {
+																"value": "@concat(replace(item().source_table, 'PHI_PMHC_', ''), '.csv')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									},
+									{
+										"value": "PHI_PMHC_service-contacts",
+										"activities": [
+											{
+												"name": "Create SERVICE-CONTACS CSV file",
+												"type": "Copy",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "AzureSqlSource",
+														"queryTimeout": "02:00:00",
+														"partitionOption": "None"
+													},
+													"sink": {
+														"type": "DelimitedTextSink",
+														"storeSettings": {
+															"type": "AzureBlobFSWriteSettings"
+														},
+														"formatSettings": {
+															"type": "DelimitedTextWriteSettings",
+															"quoteAllText": true,
+															"fileExtension": ".txt"
+														}
+													},
+													"enableStaging": false,
+													"translator": {
+														"type": "TabularTranslator",
+														"typeConversion": true,
+														"typeConversionSettings": {
+															"allowDataTruncation": true,
+															"treatBooleanAsNumber": false
+														}
+													}
+												},
+												"inputs": [
+													{
+														"referenceName": "ds_DB_PHI_STAGING",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_TableName": {
+																"value": "@item().source_table",
+																"type": "Expression"
+															}
+														}
+													}
+												],
+												"outputs": [
+													{
+														"referenceName": "ds_CSV_Sink",
+														"type": "DatasetReference",
+														"parameters": {
+															"ds_P_DirectoryName": {
+																"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+																"type": "Expression"
+															},
+															"ds_P_FileName": {
+																"value": "@concat(replace(item().source_table, 'PHI_PMHC_', ''), '.csv')",
+																"type": "Expression"
+															}
+														}
+													}
+												]
+											}
+										]
+									}
+								],
+								"defaultActivities": [
+									{
+										"name": "Create CSV files",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "AzureSqlSource",
+												"queryTimeout": "02:00:00",
+												"partitionOption": "None"
+											},
+											"sink": {
+												"type": "DelimitedTextSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings"
+												},
+												"formatSettings": {
+													"type": "DelimitedTextWriteSettings",
+													"quoteAllText": true,
+													"fileExtension": ".txt"
+												}
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": {
+														"value": "@item().source_table",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_CSV_Sink",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@pipeline().parameters.PL_START_DIRECTORY",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@concat(replace(item().source_table, 'PHI_PMHC_', ''), '.csv')",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Delete TEMP Files",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY)",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "Create ZIP",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ForEach PHI PMHC table create csv",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.csv"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_ZIP_Source",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_DirectoryName": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_ZIP_Sink",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_DirectoryName": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							},
+							"ds_P_FileName": "Pmhcol-PHN204-Gippsland.zip"
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/PMHC_MDS/WA_PMHC_MDS/"
+			}
+		},
+		"folder": {
+			"name": "PMHC-MDS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-17T03:27:40Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

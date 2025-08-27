@@ -1,0 +1,16 @@
+{
+	"name": "ds_dw_prod_pgserverless",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "gphn_dw_prod_gpserverless",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "GPHN_DW_PROD_GPSERVERLESS"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

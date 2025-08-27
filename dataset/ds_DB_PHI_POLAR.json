@@ -1,0 +1,28 @@
+{
+	"name": "ds_DB_PHI_POLAR",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "gphn_dw_prod_gpserverless",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_TableName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_DW_PROD_GPSERVERLESS"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "POLAR",
+			"table": {
+				"value": "@dataset().ds_P_TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

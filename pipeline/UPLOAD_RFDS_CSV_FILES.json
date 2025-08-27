@@ -1,0 +1,609 @@
+{
+	"name": "UPLOAD_RFDS_CSV_FILES",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get CSV List Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Delete RFDS_Renamed_copy1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "File Copy to TEMP with PREFIX",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get CSV List Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get CSV List Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy PMHC_RFDS with PREFIX",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_CSV_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_CSV_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'RFDS_Renamed')",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@concat(pipeline().parameters.PL_Dataset_PREFIX, '_', replace(item().Name,'-','_'))",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Get File with Prefix Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "File Copy to TEMP with PREFIX",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'RFDS_Renamed')",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "TEMP File copy to STAGING",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Store File Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get File with Prefix Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "If Table Name Episodes",
+							"description": "check if the table name is episode to add a column.",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().name,'PMHC_RFDS_episodes.csv')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Copy Files to STAGING",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBatchSize": 250000,
+												"writeBatchTimeout": "20:00:00",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": true,
+												"tableOption": "autoCreate",
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'RFDS_Renamed')",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": {
+														"value": "@replace(replace(item().name, '.csv', ''),'-','_')",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Copy Files to STAGING episodes table",
+										"description": "add a column to episodes table",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "DelimitedTextSource",
+												"additionalColumns": [
+													{
+														"name": "Test",
+														"value": "1"
+													}
+												],
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "DelimitedTextReadSettings"
+												}
+											},
+											"sink": {
+												"type": "AzureSqlSink",
+												"writeBatchSize": 250000,
+												"writeBatchTimeout": "20:00:00",
+												"writeBehavior": "insert",
+												"sqlWriterUseTableLock": true,
+												"tableOption": "autoCreate",
+												"disableMetricsCollection": false
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"typeConversion": true,
+												"typeConversionSettings": {
+													"allowDataTruncation": true,
+													"treatBooleanAsNumber": false
+												}
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "ds_CSV_Source",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_DirectoryName": {
+														"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'RFDS_Renamed')",
+														"type": "Expression"
+													},
+													"ds_P_FileName": {
+														"value": "@item().name",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "ds_DB_PHI_STAGING",
+												"type": "DatasetReference",
+												"parameters": {
+													"ds_P_TableName": {
+														"value": "@replace(item().name, '.csv', '')",
+														"type": "Expression"
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						},
+						{
+							"name": "Process staging table RFDS",
+							"description": "process and moves data from staging to production",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "If Table Name Episodes",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[PMHC].[Process_Staging_Table_PMHC_RFDS]",
+								"storedProcedureParameters": {
+									"P_table_name": {
+										"value": {
+											"value": "@replace(replace(item().name, '.csv', ''),'-','_')",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "gphn_dw_prod_gpserverless",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Delete RFDS_TEMP Files",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "TEMP File copy to STAGING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "Delete RFDS_Renamed",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Delete RFDS_TEMP Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'RFDS_Renamed')",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "Store File Metadata",
+				"description": "Stores file names in the DB and deletes any existing similar STAGING tables",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get File with Prefix Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_Store_COPY_FILES]",
+					"storedProcedureParameters": {
+						"IN_DESTINATION_SCHEMA": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA\r\n",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_JSON_STRING": {
+							"value": {
+								"value": "@string(activity('Get File with Prefix Metadata').output.childItems)\r\n",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Delete RFDS_Renamed_copy1",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'RFDS_Renamed')",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/PMHC_MDS/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "PMHC"
+			},
+			"PL_Dataset_PREFIX": {
+				"type": "string",
+				"defaultValue": "PMHC_RFDS"
+			},
+			"PL_Temp_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/PMHC_MDS/RFDS_TEMP"
+			}
+		},
+		"folder": {
+			"name": "PMHC-MDS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-01-13T23:39:23Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

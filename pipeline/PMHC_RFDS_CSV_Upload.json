@@ -1,0 +1,216 @@
+{
+	"name": "PMHC_RFDS_CSV_Upload",
+	"properties": {
+		"description": "Bushfire",
+		"activities": [
+			{
+				"name": "Get Metadata_ZIP",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'RFDS')",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata_ZIP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata_ZIP').output.childItems",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Unzip File",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Delete RFDS_TEMP Files",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "BinarySource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"deleteFilesAfterCompletion": false
+									},
+									"formatSettings": {
+										"type": "BinaryReadSettings",
+										"compressionProperties": {
+											"type": "ZipDeflateReadSettings",
+											"preserveZipFileNameAsFolder": false
+										}
+									}
+								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_BIN_UNZIP_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_FolderFileName": {
+											"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'RFDS/')",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_BIN_UNZIP_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_FolderName": {
+											"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete RFDS_TEMP Files",
+							"type": "Delete",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_GetMetadata",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_StartDirectory": {
+											"value": "@pipeline().parameters.PL_Temp_DIRECTORY",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Rename and upload RFDS CSV",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Unzip File",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "UPLOAD_RFDS_CSV_FILES",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/PMHC_MDS/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "PMHC"
+			},
+			"PL_Dataset_PREFIX": {
+				"type": "string",
+				"defaultValue": "PMHC_RFDS"
+			},
+			"PL_Temp_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/PMHC_MDS/RFDS_TEMP"
+			}
+		},
+		"folder": {
+			"name": "PMHC-MDS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-09-16T02:52:06Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

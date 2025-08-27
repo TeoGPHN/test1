@@ -1,0 +1,146 @@
+{
+	"name": "TEST_GETDATA",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_GETDATA_SourceCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"DS_P_GetDirectory": {
+								"value": "@pipeline().parameters.PL_P_GetDirectory",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems",
+						"itemType"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Stored procedure1",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_Store_COPY_FILES]",
+					"storedProcedureParameters": {
+						"IN_DESTINATION_SCHEMA": {
+							"value": "",
+							"type": "String"
+						},
+						"IN_JSON_STRING": {
+							"value": "",
+							"type": "String"
+						},
+						"IN_PIPE_NAME": {
+							"value": "",
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": "",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Stored procedure2",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_Store_COPY_FILES]",
+					"storedProcedureParameters": {
+						"IN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_STRING": {
+							"value": {
+								"value": "@string(activity('Get Metadata1').output.childItems)",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"PL_P_GetDirectory": {
+				"type": "string",
+				"defaultValue": "bronze/TEST"
+			}
+		},
+		"folder": {
+			"name": "SUDEN"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-17T07:48:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

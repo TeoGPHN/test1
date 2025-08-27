@@ -1,0 +1,162 @@
+{
+	"name": "POLAR_PPCC_Process",
+	"properties": {
+		"activities": [
+			{
+				"name": "Create PPCC Tables",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[POLAR].[Create_PPCC_TABLES_FINAL]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get list of PPCC tables",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Create PPCC Tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT  [sink_schema]\n              ,[sink_table]\nFROM    [dbo].[vw_PHI_PROD_Tables]\nWHERE   [sink_schema] = 'POLAR'\nAND     [sink_table] like 'PPCC_%'",
+						"queryTimeout": "02:00:00",
+						"isolationLevel": "Snapshot",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_dw_prod_pgserverless",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach create PPCC csv files",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get list of PPCC tables",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get list of PPCC tables').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Create PPCC csv files",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_DB_PHI_POLAR",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_TableName": {
+											"value": "@item().sink_table",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_CSV_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@pipeline().parameters.PL_START_DIRECTORY",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@replace(concat(item().sink_table, formatDateTime(utcNow(),'_yyyy_MM_dd'), '.csv'), 'PPCC', 'PHN204')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/POLAR/PPCC/"
+			}
+		},
+		"folder": {
+			"name": "POLAR"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-29T23:26:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

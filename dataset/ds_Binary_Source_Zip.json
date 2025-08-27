@@ -1,0 +1,33 @@
+{
+	"name": "ds_Binary_Source_Zip",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_gphndlprod001",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_StartDirectory": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_ADSL_PROD001"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().ds_P_StartDirectory",
+					"type": "Expression"
+				}
+			},
+			"compression": {
+				"type": "ZipDeflate",
+				"level": "Optimal"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

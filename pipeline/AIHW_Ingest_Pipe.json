@@ -1,0 +1,201 @@
+{
+	"name": "AIHW_Ingest_Pipe",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute Pipeline1",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ForEach worksheet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PHI_STAGING_GENERIC_PIPE",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PL_Start_DIRECTORY": {
+							"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'CSV\\')",
+							"type": "Expression"
+						},
+						"PL_Sink_SCHEMA": "GPHN"
+					}
+				}
+			},
+			{
+				"name": "Create_GPHN_2024_2025",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_GPHN_StrategicDashboard_2024_2025]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get worksheet names",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureTableSource",
+						"azureTableSourceIgnoreTableNotFound": false
+					},
+					"dataset": {
+						"referenceName": "ds_Table_AIHW_Worksheets",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach worksheet",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get worksheet names",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get worksheet names').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy to CSV",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ExcelSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_EXCEL_Source_AIHW",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@pipeline().parameters.PL_FileName",
+											"type": "Expression"
+										},
+										"ds_P_SheetName": {
+											"value": "@item().WorksheetName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_CSV_Sink_copy1",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
+										"ds_P_FileName": {
+											"value": "@concat(item().WorksheetName, '.csv')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/AIHW PIP-QI Data/"
+			},
+			"PL_FileName": {
+				"type": "string",
+				"defaultValue": "PHN204_test_dashboard.xlsx"
+			}
+		},
+		"folder": {
+			"name": "AIHW"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-04-23T04:25:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

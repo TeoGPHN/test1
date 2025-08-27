@@ -1,0 +1,29 @@
+{
+	"name": "ds_UNZIP_Sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_gphndlprod001",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_FolderName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_ADSL_PROD001"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": {
+					"value": "@dataset().ds_P_FolderName",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,9 @@
+{
+	"name": "gphn-shared-prod-df",
+	"location": "australiaeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "fe6ae3e5-7412-4737-9d6b-20fd183ed0bf",
+		"tenantId": "7e9ecdae-7544-474c-acf1-4746d022a9bc"
+	}
+}

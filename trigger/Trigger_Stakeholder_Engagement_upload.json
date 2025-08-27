@@ -1,0 +1,29 @@
+{
+	"name": "Trigger_Stakeholder_Engagement_upload",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PHI_STAKEHOLDER_ENGAGEMENT_PIPE",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"PL_Start_DIRECTORY": "bronze/STAKEHOLDER_ENGAGEMENT/Folio_CSV/",
+					"PL_Sink_SCHEMA": "GPHN"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/bronze/blobs/STAKEHOLDER_ENGAGEMENT/Folio_CSV/",
+			"blobPathEndsWith": "Report_BI_Process_Stakeholder_Engagement.csv",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
