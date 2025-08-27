@@ -1,5 +1,11 @@
 {
 	"name": "gphn-shared-prod-df",
+	"properties": {
+		"globalConfigurations": {
+			"factoryStagingLSReferenceName": "ADLS_gphndlprod001",
+			"factoryStagingLSType": "LinkedServiceReference"
+		}
+	},
 	"location": "australiaeast",
 	"identity": {
 		"type": "SystemAssigned",
