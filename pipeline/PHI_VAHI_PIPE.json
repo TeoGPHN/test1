@@ -17,7 +17,7 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"PL_Start_DIRECTORY": "bronze/VAHI/VEMD/",
+						"PL_Start_DIRECTORY": "bronze/VAHI/VAED/",
 						"PL_Sink_SCHEMA": "GPHN"
 					}
 				}
