@@ -1,0 +1,179 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "gphn-shared-prod-df"
+		},
+		"ADLS_gphndlprod001_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_gphndlprod001'"
+		},
+		"ADLS_gphnpolarprod_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_gphnpolarprod'"
+		},
+		"AzureTableStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureTableStorage1'"
+		},
+		"ADLS_gphndlprod001_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://gphndlprod001.dfs.core.windows.net/"
+		},
+		"ADLS_gphnpolarprod_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://gphnpolarprod.dfs.core.windows.net/"
+		},
+		"gphn_dw_prod_gpserverless_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "gphn-dbserver-prod-sqlserver.database.windows.net"
+		},
+		"gphn_dw_prod_gpserverless_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "gphn-dw-prod-gpserverless"
+		},
+		"Trigger_Executive_Dashboard_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
+		},
+		"Trigger_Stakeholder_Engagement_upload_properties_PHI_STAKEHOLDER_ENGAGEMENT_PIPE_parameters_PL_Start_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/STAKEHOLDER_ENGAGEMENT/Folio_CSV/"
+		},
+		"Trigger_Stakeholder_Engagement_upload_properties_PHI_STAKEHOLDER_ENGAGEMENT_PIPE_parameters_PL_Sink_SCHEMA": {
+			"type": "string",
+			"defaultValue": "GPHN"
+		},
+		"Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "gphn-shared-prod-df_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ADLS_gphndlprod001_accountKey": {
+						"value": "[parameters('ADLS_gphndlprod001_accountKey')]"
+					},
+					"ADLS_gphnpolarprod_accountKey": {
+						"value": "[parameters('ADLS_gphnpolarprod_accountKey')]"
+					},
+					"AzureTableStorage1_connectionString": {
+						"value": "[parameters('AzureTableStorage1_connectionString')]"
+					},
+					"ADLS_gphndlprod001_properties_typeProperties_url": {
+						"value": "[parameters('ADLS_gphndlprod001_properties_typeProperties_url')]"
+					},
+					"ADLS_gphnpolarprod_properties_typeProperties_url": {
+						"value": "[parameters('ADLS_gphnpolarprod_properties_typeProperties_url')]"
+					},
+					"gphn_dw_prod_gpserverless_properties_typeProperties_server": {
+						"value": "[parameters('gphn_dw_prod_gpserverless_properties_typeProperties_server')]"
+					},
+					"gphn_dw_prod_gpserverless_properties_typeProperties_database": {
+						"value": "[parameters('gphn_dw_prod_gpserverless_properties_typeProperties_database')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "gphn-shared-prod-df_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'gphn-shared-prod-df_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "gphn-shared-prod-df_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'gphn-shared-prod-df_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "gphn-shared-prod-df_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"Trigger_Executive_Dashboard_properties_typeProperties_scope": {
+						"value": "[parameters('Trigger_Executive_Dashboard_properties_typeProperties_scope')]"
+					},
+					"Trigger_Stakeholder_Engagement_upload_properties_PHI_STAKEHOLDER_ENGAGEMENT_PIPE_parameters_PL_Start_DIRECTORY": {
+						"value": "[parameters('Trigger_Stakeholder_Engagement_upload_properties_PHI_STAKEHOLDER_ENGAGEMENT_PIPE_parameters_PL_Start_DIRECTORY')]"
+					},
+					"Trigger_Stakeholder_Engagement_upload_properties_PHI_STAKEHOLDER_ENGAGEMENT_PIPE_parameters_PL_Sink_SCHEMA": {
+						"value": "[parameters('Trigger_Stakeholder_Engagement_upload_properties_PHI_STAKEHOLDER_ENGAGEMENT_PIPE_parameters_PL_Sink_SCHEMA')]"
+					},
+					"Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope": {
+						"value": "[parameters('Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'gphn-shared-prod-df_ArmTemplate_2')]"
+			]
+		}
+	]
+}
