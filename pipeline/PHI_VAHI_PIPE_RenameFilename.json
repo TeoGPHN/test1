@@ -1,0 +1,234 @@
+{
+	"name": "PHI_VAHI_PIPE_RenameFilename",
+	"properties": {
+		"activities": [
+			{
+				"name": "Create_DSA_PHN_VAED_VEMD",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_DSA_PHN_VAED_VEMD]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get File Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_GetMetadata",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_P_StartDirectory": {
+								"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "ForEach File",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Store File Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get File Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy CSV to STAGING",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_CSV_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_DB_PHI_STAGING",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_TableName": {
+											"value": "DSA_PHN_VAED",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Store File Metadata",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get File Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[PHI_Store_COPY_FILES]",
+					"storedProcedureParameters": {
+						"IN_JSON_STRING": {
+							"value": {
+								"value": "@string(activity('Get File Metadata').output.childItems)",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_PIPE_NAME": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_RUN_ID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"IN_DESTINATION_SCHEMA": {
+							"value": {
+								"value": "@pipeline().parameters.PL_Sink_SCHEMA",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/VAHI/VAED/"
+			},
+			"PL_Sink_SCHEMA": {
+				"type": "string",
+				"defaultValue": "STAGING"
+			}
+		},
+		"folder": {
+			"name": "VAHI"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-12-17T07:44:15Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
