@@ -222,6 +222,10 @@
 			"PL_Sink_SCHEMA": {
 				"type": "string",
 				"defaultValue": "STAGING"
+			},
+			"PL_Sink_SCHEMA2": {
+				"type": "string",
+				"defaultValue": "GPHN"
 			}
 		},
 		"folder": {
