@@ -3403,6 +3403,7 @@
 								"value": "@activity('Get File Metadata').output.childItems",
 								"type": "Expression"
 							},
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "Copy CSV to STAGING",
