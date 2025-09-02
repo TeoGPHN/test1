@@ -1862,7 +1862,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"ds_P_TableName": {
-													"value": "DSA_PHN_VAED",
+													"value": "@replace(item().name, '.csv', '')",
 													"type": "Expression"
 												}
 											}
