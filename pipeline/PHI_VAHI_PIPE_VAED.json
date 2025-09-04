@@ -4,6 +4,7 @@
 		"activities": [
 			{
 				"name": "Create_DSA_PHN_VAED",
+				"description": "consolidates and inserts records from all year tables in staging to production.",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
