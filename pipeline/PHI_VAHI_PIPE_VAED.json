@@ -22,7 +22,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[GPHN].[Create_DSA_PHN_VAED_VEMD]"
+					"storedProcedureName": "[GPHN].[Create_DSA_PHN_VAED]"
 				},
 				"linkedServiceName": {
 					"referenceName": "gphn_dw_prod_gpserverless",
