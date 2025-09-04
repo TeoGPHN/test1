@@ -1718,7 +1718,8 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Create_DSA_PHN_VAED_VEMD",
+						"name": "Create_DSA_PHN_VAED",
+						"description": "consolidates and inserts records from all year tables in staging to production.",
 						"type": "SqlServerStoredProcedure",
 						"dependsOn": [
 							{
@@ -1737,7 +1738,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"storedProcedureName": "[[GPHN].[Create_DSA_PHN_VAED_VEMD]"
+							"storedProcedureName": "[[GPHN].[Create_DSA_PHN_VAED]"
 						},
 						"linkedServiceName": {
 							"referenceName": "gphn_dw_prod_gpserverless",
