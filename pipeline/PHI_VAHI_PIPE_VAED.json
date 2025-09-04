@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Create_DSA_PHN_VAED_VEMD",
+				"name": "Create_DSA_PHN_VAED",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
