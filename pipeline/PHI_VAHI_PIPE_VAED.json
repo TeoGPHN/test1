@@ -6,14 +6,9 @@
 				"name": "Create_DSA_PHN_VAED",
 				"description": "consolidates and inserts records from all year tables in staging to production.",
 				"type": "SqlServerStoredProcedure",
-				"dependsOn": [
-					{
-						"activity": "ForEach File",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -214,12 +209,40 @@
 					"referenceName": "gphn_dw_prod_gpserverless",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "Create_DSA_PHN_VEMD",
+				"description": "consolidates and inserts records from all year tables in staging to production.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_DSA_PHN_VEMD]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"parameters": {
 			"PL_Start_DIRECTORY": {
 				"type": "string",
-				"defaultValue": "bronze/VAHI/VAED/"
+				"defaultValue": "bronze/VAHI/VEMD/"
 			},
 			"PL_Sink_SCHEMA": {
 				"type": "string",
