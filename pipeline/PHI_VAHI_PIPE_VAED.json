@@ -237,6 +237,29 @@
 					"referenceName": "gphn_dw_prod_gpserverless",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "Create_DSA_PHN_CHMDS",
+				"description": "consolidates and inserts records from all year tables in staging to production.",
+				"type": "SqlServerStoredProcedure",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_DSA_PHN_CHMDS]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"parameters": {
