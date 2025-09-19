@@ -1929,14 +1929,9 @@
 						"name": "Create_DSA_PHN_VEMD",
 						"description": "consolidates and inserts records from all year tables in staging to production.",
 						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "ForEach File",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -1957,9 +1952,14 @@
 						"name": "Create_DSA_PHN_CHMDS",
 						"description": "consolidates and inserts records from all year tables in staging to production.",
 						"type": "SqlServerStoredProcedure",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "ForEach File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -1983,7 +1983,7 @@
 				"parameters": {
 					"PL_Start_DIRECTORY": {
 						"type": "string",
-						"defaultValue": "bronze/VAHI/VEMD/"
+						"defaultValue": "bronze/VAHI/CHMDS/"
 					},
 					"PL_Sink_SCHEMA": {
 						"type": "string",
