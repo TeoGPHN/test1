@@ -130,7 +130,7 @@
 								"waitOnCompletion": true,
 								"parameters": {
 									"PL_Start_DIRECTORY": {
-										"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+										"value": "@pipeline().parameters.PL_CSV_DIRECTORY",
 										"type": "Expression"
 									},
 									"PL_FileName": {
