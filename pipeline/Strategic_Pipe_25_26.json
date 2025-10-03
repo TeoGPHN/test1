@@ -1,0 +1,199 @@
+{
+	"name": "Strategic_Pipe_25_26",
+	"properties": {
+		"description": "This is the DF pipe that will process the 25_26 startegic dashboard spreadsheat",
+		"activities": [
+			{
+				"name": "Execute GEN Pipeline",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "ForEach worksheet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PHI_STAGING_GENERIC_PIPE",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"PL_Start_DIRECTORY": {
+							"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'CSV\\')",
+							"type": "Expression"
+						},
+						"PL_Sink_SCHEMA": "GPHN"
+					}
+				}
+			},
+			{
+				"name": "Create_GPHN_2024_2025",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Execute GEN Pipeline",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[GPHN].[Create_GPHN_StrategicDashboard_2024_2025]"
+				},
+				"linkedServiceName": {
+					"referenceName": "gphn_dw_prod_gpserverless",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get worksheet names",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureTableSource",
+						"azureTableSourceIgnoreTableNotFound": false
+					},
+					"dataset": {
+						"referenceName": "ds_Table_StrategicWorksheets",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach worksheet",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get worksheet names",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get worksheet names').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy to CSV",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ExcelSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_EXCEL_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": {
+											"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@pipeline().parameters.PL_FileName",
+											"type": "Expression"
+										},
+										"ds_P_SheetName": {
+											"value": "@item().RowKey",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_CSV_Sink_copy1",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_DirectoryName": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
+										"ds_P_FileName": "@concat(item().RowKey, '.csv')"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"PL_Start_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/STRATEGIC_DASHBOARD/"
+			},
+			"PL_FileName": {
+				"type": "string",
+				"defaultValue": "Raw Data 2024-25 Strategic Dashboard Report Q2 24-25.xlsx"
+			}
+		},
+		"folder": {
+			"name": "STRATEGIC_DASHBOARD"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-08-01T02:45:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
