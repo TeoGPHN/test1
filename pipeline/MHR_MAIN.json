@@ -148,6 +148,8 @@
 						{
 							"name": "Copy_To_Processed_Folder",
 							"type": "Copy",
+							"state": "Inactive",
+							"onInactiveMarkAs": "Succeeded",
 							"dependsOn": [
 								{
 									"activity": "Process EXCEL file",
