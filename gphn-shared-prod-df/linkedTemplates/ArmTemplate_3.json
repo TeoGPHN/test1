@@ -2107,8 +2107,10 @@
 						}
 					},
 					{
-						"name": "Create_GPHN_2024_2025",
+						"name": "Create_GPHN_2025_2026",
 						"type": "SqlServerStoredProcedure",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
 								"activity": "Execute Pipeline1",
