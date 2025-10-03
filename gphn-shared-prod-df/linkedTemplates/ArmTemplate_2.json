@@ -2698,7 +2698,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"ds_P_FileName": {
-													"value": "@item()",
+													"value": "@item().name",
 													"type": "Expression"
 												},
 												"ds_P_StartDirectory": {
@@ -2718,7 +2718,7 @@
 													"type": "Expression"
 												},
 												"ds_P_FileName": {
-													"value": "@item()",
+													"value": "@item().name",
 													"type": "Expression"
 												}
 											}
