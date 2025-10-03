@@ -5230,6 +5230,7 @@
 								"value": "@activity('Get worksheet names').output.value",
 								"type": "Expression"
 							},
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "If_Worksheet_Name",

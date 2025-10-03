@@ -972,7 +972,7 @@
 								"value": "@activity('Get File Metadata').output.childItems",
 								"type": "Expression"
 							},
-							"isSequential": false,
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "Process EXCEL file",
@@ -1078,6 +1078,7 @@
 								"value": "@activity('Get worksheet names').output.value",
 								"type": "Expression"
 							},
+							"isSequential": true,
 							"activities": [
 								{
 									"name": "If_Worksheet_Name",
