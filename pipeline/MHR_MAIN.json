@@ -138,12 +138,15 @@
 										"type": "Expression"
 									},
 									"PL_Sink_SCHEMA": "GPHN",
-									"PL_CSV_DIRECTORY": "@pipeline().parameters.PL_CSV_DIRECTORY"
+									"PL_CSV_DIRECTORY": {
+										"value": "@pipeline().parameters.PL_CSV_DIRECTORY",
+										"type": "Expression"
+									}
 								}
 							}
 						},
 						{
-							"name": "Copy data1",
+							"name": "Copy_To_Processed_Folder",
 							"type": "Copy",
 							"dependsOn": [
 								{
@@ -163,17 +166,13 @@
 							"userProperties": [],
 							"typeProperties": {
 								"source": {
-									"type": "DelimitedTextSource",
+									"type": "BinarySource",
 									"storeSettings": {
 										"type": "AzureBlobFSReadSettings",
-										"recursive": true,
-										"enablePartitionDiscovery": false
+										"recursive": true
 									},
 									"formatSettings": {
-										"type": "DelimitedTextReadSettings",
-										"compressionProperties": {
-											"type": "ZipDeflateReadSettings"
-										}
+										"type": "BinaryReadSettings"
 									}
 								},
 								"sink": {
@@ -186,14 +185,34 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "CSVZIPIN",
-									"type": "DatasetReference"
+									"referenceName": "ds_BinaryFile_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_FileName": {
+											"value": "@item()",
+											"type": "Expression"
+										},
+										"ds_P_StartDirectory": {
+											"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+											"type": "Expression"
+										}
+									}
 								}
 							],
 							"outputs": [
 								{
 									"referenceName": "ds_BIN_UNZIP_Source",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"ds_P_FolderFileName": {
+											"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+											"type": "Expression"
+										},
+										"ds_P_FileName": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
