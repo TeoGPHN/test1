@@ -1163,7 +1163,7 @@
 														"type": "DatasetReference",
 														"parameters": {
 															"ds_P_DirectoryName": {
-																"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
+																"value": "@pipeline().parameters.PL_CSV_DIRECTORY",
 																"type": "Expression"
 															},
 															"ds_P_FileName": {
@@ -1244,7 +1244,7 @@
 														"type": "DatasetReference",
 														"parameters": {
 															"ds_P_DirectoryName": {
-																"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
+																"value": "@pipeline().parameters.PL_CSV_DIRECTORY",
 																"type": "Expression"
 															},
 															"ds_P_FileName": {
@@ -1284,7 +1284,7 @@
 							"waitOnCompletion": true,
 							"parameters": {
 								"PL_Start_DIRECTORY": {
-									"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+									"value": "@pipeline().parameters.PL_CSV_DIRECTORY",
 									"type": "Expression"
 								},
 								"PL_Sink_SCHEMA": "STAGING"
@@ -1372,6 +1372,10 @@
 					"PL_Sink_SCHEMA": {
 						"type": "string",
 						"defaultValue": "GPHN"
+					},
+					"PL_CSV_DIRECTORY": {
+						"type": "string",
+						"defaultValue": "bronze/MHR/CSV/"
 					}
 				},
 				"folder": {
