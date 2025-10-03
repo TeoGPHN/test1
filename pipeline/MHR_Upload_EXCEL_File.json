@@ -245,7 +245,7 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"PL_Start_DIRECTORY": {
-							"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'CSV/')",
+							"value": "@pipeline().parameters.PL_Start_DIRECTORY",
 							"type": "Expression"
 						},
 						"PL_Sink_SCHEMA": "STAGING"
