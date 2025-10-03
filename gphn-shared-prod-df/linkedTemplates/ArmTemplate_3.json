@@ -2614,7 +2614,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "MHR_hist_load",
+											"referenceName": "MHR_Upload_EXCEL_File",
 											"type": "PipelineReference"
 										},
 										"waitOnCompletion": true,
@@ -2627,7 +2627,8 @@
 												"value": "@item().name",
 												"type": "Expression"
 											},
-											"PL_Sink_SCHEMA": "GPHN"
+											"PL_Sink_SCHEMA": "GPHN",
+											"PL_CSV_DIRECTORY": "@pipeline().parameters.PL_CSV_DIRECTORY"
 										}
 									}
 								}
