@@ -77,7 +77,7 @@
 						"azureTableSourceIgnoreTableNotFound": false
 					},
 					"dataset": {
-						"referenceName": "ds_Table_StrategicWorksheets",
+						"referenceName": "ds_Table_StrategicWorksheets_2526",
 						"type": "DatasetReference"
 					},
 					"firstRowOnly": false
@@ -185,7 +185,7 @@
 			},
 			"PL_FileName": {
 				"type": "string",
-				"defaultValue": "Raw Data 2024-25 Strategic Dashboard Report Q2 24-25.xlsx"
+				"defaultValue": "Raw Data 2025-26 Strategic Dashboard Report Q1 25-26.xlsx"
 			}
 		},
 		"folder": {
