@@ -1,0 +1,29 @@
+{
+	"name": "ds_BinaryFile_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_gphndlprod001",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ds_P_FileName": {
+				"type": "string"
+			},
+			"ds_P_StartDirectory": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "GPHN_ADSL_PROD001"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "@dataset().ds_P_FileName",
+				"folderPath": "@dataset().ds_P_DirectoryName"
+			}
+		}
+	}
+}
