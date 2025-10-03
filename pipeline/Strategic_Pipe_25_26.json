@@ -3,11 +3,11 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Execute Pipeline1",
+				"name": "CSV to DATABASE",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "ForEach worksheet",
+						"activity": "CSV ForEach worksheet",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -33,13 +33,13 @@
 				}
 			},
 			{
-				"name": "Create_GPHN_2025_2026",
+				"name": "STAGING to 25_26",
 				"type": "SqlServerStoredProcedure",
 				"state": "Inactive",
 				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
-						"activity": "Execute Pipeline1",
+						"activity": "CSV to DATABASE",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -86,7 +86,7 @@
 				}
 			},
 			{
-				"name": "ForEach worksheet",
+				"name": "CSV ForEach worksheet",
 				"type": "ForEach",
 				"dependsOn": [
 					{
