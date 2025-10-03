@@ -216,7 +216,7 @@
 									"type": "BinarySink",
 									"storeSettings": {
 										"type": "AzureBlobFSWriteSettings",
-										"copyBehavior": "PreserveHierarchy"
+										"copyBehavior": "FlattenHierarchy"
 									}
 								},
 								"enableStaging": false
@@ -239,14 +239,11 @@
 							],
 							"outputs": [
 								{
-									"referenceName": "ds_BIN_UNZIP_Source",
+									"referenceName": "ds_BinaryFile_Sink",
 									"type": "DatasetReference",
 									"parameters": {
-										"ds_P_FolderFileName": {
-											"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
-											"type": "Expression"
-										},
-										"ds_P_FileName": {
+										"ds_P_FileName": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+										"ds_P_StartDirectory": {
 											"value": "@item().name",
 											"type": "Expression"
 										}
