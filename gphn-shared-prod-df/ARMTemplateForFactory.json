@@ -1008,6 +1008,8 @@
 								{
 									"name": "Copy_To_Processed_Folder",
 									"type": "Copy",
+									"state": "Inactive",
+									"onInactiveMarkAs": "Succeeded",
 									"dependsOn": [
 										{
 											"activity": "Process EXCEL file",
@@ -6785,7 +6787,7 @@
 											"type": "BinarySink",
 											"storeSettings": {
 												"type": "AzureBlobFSWriteSettings",
-												"copyBehavior": "PreserveHierarchy"
+												"copyBehavior": "FlattenHierarchy"
 											}
 										},
 										"enableStaging": false
@@ -6808,14 +6810,11 @@
 									],
 									"outputs": [
 										{
-											"referenceName": "ds_BIN_UNZIP_Source",
+											"referenceName": "ds_BinaryFile_Sink",
 											"type": "DatasetReference",
 											"parameters": {
-												"ds_P_FolderFileName": {
-													"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
-													"type": "Expression"
-												},
-												"ds_P_FileName": {
+												"ds_P_FileName": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+												"ds_P_StartDirectory": {
 													"value": "@item().name",
 													"type": "Expression"
 												}
@@ -6851,7 +6850,7 @@
 				"[concat(variables('factoryId'), '/linkedServices/gphn_dw_prod_gpserverless')]",
 				"[concat(variables('factoryId'), '/datasets/ds_GetMetadata')]",
 				"[concat(variables('factoryId'), '/datasets/ds_BinaryFile_Source')]",
-				"[concat(variables('factoryId'), '/datasets/ds_BIN_UNZIP_Source')]"
+				"[concat(variables('factoryId'), '/datasets/ds_BinaryFile_Sink')]"
 			]
 		},
 		{
