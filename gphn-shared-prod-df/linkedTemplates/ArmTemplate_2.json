@@ -13,6 +13,78 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_UNZIP_Sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_gphndlprod001",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_P_FolderName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "GPHN_ADSL_PROD001"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": {
+							"value": "@dataset().ds_P_FolderName",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_UNZIP_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_gphndlprod001",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_P_FolderName": {
+						"type": "String"
+					},
+					"ds_P_FileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "GPHN_ADSL_PROD001"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_P_FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().ds_P_FolderName",
+							"type": "Expression"
+						}
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_ZIP_Sink')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -5614,255 +5686,6 @@
 				},
 				"annotations": [],
 				"lastPublishTime": "2025-06-11T03:38:03Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PHI_STAGING_GENERIC_PIPE')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/MHR_hist_load')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Upload CSV to STAGING",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "Create MHR_Usage csv_copy1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PHI_STAGING_GENERIC_PIPE",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"PL_Start_DIRECTORY": {
-									"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, 'CSV/')",
-									"type": "Expression"
-								},
-								"PL_Sink_SCHEMA": "STAGING"
-							}
-						}
-					},
-					{
-						"name": "Create_MHR_DigitalHealth_Files",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "Upload CSV to STAGING",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[GPHN].[Create_MHR_DigitalHealth_Files]"
-						},
-						"linkedServiceName": {
-							"referenceName": "gphn_dw_prod_gpserverless",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Create MHR_Usage csv_copy1",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "ExcelSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								}
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ds_EXCEL_Source",
-								"type": "DatasetReference",
-								"parameters": {
-									"ds_P_DirectoryName": {
-										"value": "@pipeline().parameters.PL_Start_DIRECTORY",
-										"type": "Expression"
-									},
-									"ds_P_FileName": {
-										"value": "@pipeline().parameters.PL_FileName",
-										"type": "Expression"
-									},
-									"ds_P_SheetName": "Usage"
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ds_CSV_Sink",
-								"type": "DatasetReference",
-								"parameters": {
-									"ds_P_DirectoryName": {
-										"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY, '\\CSV\\')",
-										"type": "Expression"
-									},
-									"ds_P_FileName": {
-										"value": "MHR_Usage.csv",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"PL_Start_DIRECTORY": {
-						"type": "string",
-						"defaultValue": "bronze/MHR/2223/"
-					},
-					"PL_FileName": {
-						"type": "string",
-						"defaultValue": "Gippsland PHN Provider Reg and Use Report - August 2022.XLSX"
-					},
-					"PL_Sink_SCHEMA": {
-						"type": "string",
-						"defaultValue": "GPHN"
-					}
-				},
-				"folder": {
-					"name": "MHR"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-06-12T23:14:50Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/PHI_STAGING_GENERIC_PIPE')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/PHI_STAKEHOLDER_ENGAGEMENT_PIPE')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Stored procedure1",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [
-							{
-								"activity": "PHI_STAGING_GENERIC_PIPE",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[GPHN].[Create_StakeholderEngagement]"
-						},
-						"linkedServiceName": {
-							"referenceName": "gphn_dw_prod_gpserverless",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "PHI_STAGING_GENERIC_PIPE",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "PHI_STAGING_GENERIC_PIPE",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"PL_Start_DIRECTORY": "bronze/STAKEHOLDER_ENGAGEMENT/Folio_CSV/",
-								"PL_Sink_SCHEMA": "GPHN"
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"PL_Start_DIRECTORY": {
-						"type": "string",
-						"defaultValue": "bronze/STAKEHOLDER_ENGAGEMENT/Folio_CSV/"
-					},
-					"PL_Sink_SCHEMA": {
-						"type": "string",
-						"defaultValue": "GPHN"
-					}
-				},
-				"variables": {
-					"PL_VAR_JSON": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "SUDEN"
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-03-24T00:04:32Z"
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PHI_STAGING_GENERIC_PIPE')]"

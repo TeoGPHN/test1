@@ -998,9 +998,83 @@
 												"type": "Expression"
 											},
 											"PL_Sink_SCHEMA": "GPHN",
-											"PL_CSV_DIRECTORY": "@pipeline().parameters.PL_CSV_DIRECTORY"
+											"PL_CSV_DIRECTORY": {
+												"value": "@pipeline().parameters.PL_CSV_DIRECTORY",
+												"type": "Expression"
+											}
 										}
 									}
+								},
+								{
+									"name": "Copy_To_Processed_Folder",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Process EXCEL file",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings"
+											}
+										},
+										"sink": {
+											"type": "BinarySink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_BinaryFile_Source",
+											"type": "DatasetReference",
+											"parameters": {
+												"ds_P_FileName": {
+													"value": "@item()",
+													"type": "Expression"
+												},
+												"ds_P_StartDirectory": {
+													"value": "@pipeline().parameters.PL_Start_DIRECTORY",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_BIN_UNZIP_Source",
+											"type": "DatasetReference",
+											"parameters": {
+												"ds_P_FolderFileName": {
+													"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+													"type": "Expression"
+												},
+												"ds_P_FileName": {
+													"value": "@item()",
+													"type": "Expression"
+												}
+											}
+										}
+									]
 								}
 							]
 						}
@@ -1032,7 +1106,9 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_GetMetadata')]",
 				"[concat(variables('factoryId'), '/linkedServices/gphn_dw_prod_gpserverless')]",
-				"[concat(variables('factoryId'), '/pipelines/MHR_Upload_EXCEL_File')]"
+				"[concat(variables('factoryId'), '/pipelines/MHR_Upload_EXCEL_File')]",
+				"[concat(variables('factoryId'), '/datasets/ds_BinaryFile_Source')]",
+				"[concat(variables('factoryId'), '/datasets/ds_BIN_UNZIP_Source')]"
 			]
 		},
 		{
@@ -6068,11 +6144,11 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Execute Pipeline1",
+						"name": "CSV to DATABASE",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
-								"activity": "ForEach worksheet",
+								"activity": "CSV ForEach worksheet",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -6098,13 +6174,13 @@
 						}
 					},
 					{
-						"name": "Create_GPHN_2025_2026",
+						"name": "STAGING to 25_26",
 						"type": "SqlServerStoredProcedure",
 						"state": "Inactive",
 						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
-								"activity": "Execute Pipeline1",
+								"activity": "CSV to DATABASE",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -6119,7 +6195,7 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"storedProcedureName": "[[GPHN].[Create_GPHN_StrategicDashboard_2024_2025]"
+							"storedProcedureName": "[[GPHN].[Create_GPHN_StrategicDashboard_2025_2026]]"
 						},
 						"linkedServiceName": {
 							"referenceName": "gphn_dw_prod_gpserverless",
@@ -6152,7 +6228,7 @@
 						}
 					},
 					{
-						"name": "ForEach worksheet",
+						"name": "CSV ForEach worksheet",
 						"type": "ForEach",
 						"dependsOn": [
 							{
@@ -8770,6 +8846,86 @@
 					},
 					"compression": {
 						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_gphndlprod001')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_BinaryFile_Sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_gphndlprod001",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_P_FileName": {
+						"type": "string"
+					},
+					"ds_P_StartDirectory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "GPHN_ADSL_PROD001"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_P_FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().ds_P_StartDirectory",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_gphndlprod001')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_BinaryFile_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_gphndlprod001",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_P_FileName": {
+						"type": "string"
+					},
+					"ds_P_StartDirectory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "GPHN_ADSL_PROD001"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_P_FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().ds_P_StartDirectory",
+							"type": "Expression"
+						}
 					}
 				}
 			},

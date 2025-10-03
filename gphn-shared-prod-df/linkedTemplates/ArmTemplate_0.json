@@ -386,6 +386,86 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_BinaryFile_Sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_gphndlprod001",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_P_FileName": {
+						"type": "string"
+					},
+					"ds_P_StartDirectory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "GPHN_ADSL_PROD001"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_P_FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().ds_P_StartDirectory",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_gphndlprod001')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_BinaryFile_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ADLS_gphndlprod001",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ds_P_FileName": {
+						"type": "string"
+					},
+					"ds_P_StartDirectory": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "GPHN_ADSL_PROD001"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().ds_P_FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().ds_P_StartDirectory",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ADLS_gphndlprod001')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_Binary_Source_Zip')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -652,108 +732,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ADLS_gphndlprod001')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_CommServiceTemplate')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ADLS_gphndlprod001",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "Template_Commissioned_Services_Report.xlsx",
-						"folderPath": "COMMISSIONED_SERVICES/TEMPLATE/",
-						"fileSystem": "bronze"
-					},
-					"sheetIndex": 0,
-					"firstRowAsHeader": false
-				},
-				"schema": [
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					},
-					{
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ADLS_gphndlprod001')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_DB_PHI_GPHN')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "gphn_dw_prod_gpserverless",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"ds_P_TableName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "GPHN_DW_PROD_GPSERVERLESS"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "GPHN",
-					"table": {
-						"value": "@dataset().ds_P_TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/gphn_dw_prod_gpserverless')]"
 			]
 		}
 	]
