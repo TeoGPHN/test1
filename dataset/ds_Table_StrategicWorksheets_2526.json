@@ -12,7 +12,7 @@
 		"type": "AzureTable",
 		"schema": [],
 		"typeProperties": {
-			"tableName": "StrategicWorksheets2525"
+			"tableName": "StrategicWorksheets2526"
 		}
 	},
 	"type": "Microsoft.DataFactory/factories/datasets"
