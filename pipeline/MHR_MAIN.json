@@ -153,6 +153,10 @@
 			"PL_Sink_SCHEMA": {
 				"type": "string",
 				"defaultValue": "GPHN"
+			},
+			"PL_CSV_DIRECTORY": {
+				"type": "string",
+				"defaultValue": "bronze/MHR/CSV/"
 			}
 		},
 		"folder": {
