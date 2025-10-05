@@ -243,11 +243,11 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"ds_P_FileName": {
-											"value": "@concat(\n    replace(\n        replace(\n            replace(pipeline().parameters.PL_Start_DIRECTORY, '-', ''), \n        '_', ''), \n    '@', ''), \n    'Processed/')",
+											"value": "@item().name\n",
 											"type": "Expression"
 										},
 										"ds_P_StartDirectory": {
-											"value": "@item().name",
+											"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
 											"type": "Expression"
 										}
 									}
