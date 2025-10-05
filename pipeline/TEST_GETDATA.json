@@ -242,7 +242,10 @@
 									"referenceName": "ds_BinaryFile_Sink",
 									"type": "DatasetReference",
 									"parameters": {
-										"ds_P_FileName": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+										"ds_P_FileName": {
+											"value": "@concat(\n    replace(\n        replace(\n            replace(pipeline().parameters.PL_Start_DIRECTORY, '-', ''), \n        '_', ''), \n    '@', ''), \n    'Processed/')",
+											"type": "Expression"
+										},
 										"ds_P_StartDirectory": {
 											"value": "@item().name",
 											"type": "Expression"
