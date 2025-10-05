@@ -247,7 +247,7 @@
 											"type": "Expression"
 										},
 										"ds_P_StartDirectory": {
-											"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+											"value": "@concat(\n    substring(\n        pipeline().parameters.PL_Start_DIRECTORY,\n        0,\n        lastIndexOf(pipeline().parameters.PL_Start_DIRECTORY, '/')\n    ),\n    'Processed/'\n)",
 											"type": "Expression"
 										}
 									}
