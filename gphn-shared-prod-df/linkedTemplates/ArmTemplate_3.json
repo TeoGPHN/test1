@@ -2883,8 +2883,6 @@
 								{
 									"name": "Copy_To_Processed_Folder",
 									"type": "Copy",
-									"state": "Inactive",
-									"onInactiveMarkAs": "Succeeded",
 									"dependsOn": [
 										{
 											"activity": "Process EXCEL file",
@@ -2906,7 +2904,8 @@
 											"type": "BinarySource",
 											"storeSettings": {
 												"type": "AzureBlobFSReadSettings",
-												"recursive": true
+												"recursive": true,
+												"deleteFilesAfterCompletion": false
 											},
 											"formatSettings": {
 												"type": "BinaryReadSettings"
@@ -2915,7 +2914,8 @@
 										"sink": {
 											"type": "BinarySink",
 											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
+												"type": "AzureBlobFSWriteSettings",
+												"copyBehavior": "FlattenHierarchy"
 											}
 										},
 										"enableStaging": false
@@ -2926,7 +2926,7 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"ds_P_FileName": {
-													"value": "@item()",
+													"value": "@item().name",
 													"type": "Expression"
 												},
 												"ds_P_StartDirectory": {
@@ -2938,15 +2938,15 @@
 									],
 									"outputs": [
 										{
-											"referenceName": "ds_BIN_UNZIP_Source",
+											"referenceName": "ds_BinaryFile_Sink",
 											"type": "DatasetReference",
 											"parameters": {
-												"ds_P_FolderFileName": {
-													"value": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+												"ds_P_FileName": {
+													"value": "@item().name\n",
 													"type": "Expression"
 												},
-												"ds_P_FileName": {
-													"value": "@item()",
+												"ds_P_StartDirectory": {
+													"value": "@pipeline().parameters.PL_Processed_DIRECTORY",
 													"type": "Expression"
 												}
 											}
@@ -2963,7 +2963,7 @@
 				"parameters": {
 					"PL_Start_DIRECTORY": {
 						"type": "string",
-						"defaultValue": "bronze/MHR/HIS_DATA/"
+						"defaultValue": "bronze/MHR/MHR_FILE_IN/"
 					},
 					"PL_Sink_SCHEMA": {
 						"type": "string",
@@ -2972,6 +2972,10 @@
 					"PL_CSV_DIRECTORY": {
 						"type": "string",
 						"defaultValue": "bronze/MHR/CSV/"
+					},
+					"PL_Processed_DIRECTORY": {
+						"type": "string",
+						"defaultValue": "bronze/MHR/Processed/"
 					}
 				},
 				"folder": {

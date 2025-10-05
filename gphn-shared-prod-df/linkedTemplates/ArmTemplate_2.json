@@ -2715,9 +2715,12 @@
 											"referenceName": "ds_BinaryFile_Sink",
 											"type": "DatasetReference",
 											"parameters": {
-												"ds_P_FileName": "@concat(pipeline().parameters.PL_Start_DIRECTORY,'Processed/')",
+												"ds_P_FileName": {
+													"value": "@item().name\n",
+													"type": "Expression"
+												},
 												"ds_P_StartDirectory": {
-													"value": "@item().name",
+													"value": "@concat(\n    substring(\n        pipeline().parameters.PL_Start_DIRECTORY,\n        0,\n        add(\n            lastIndexOf(\n                substring(\n                    pipeline().parameters.PL_Start_DIRECTORY,\n                    0,\n                    add(length(pipeline().parameters.PL_Start_DIRECTORY), -1)\n                ),\n                '/'\n            ),\n            1\n        )\n    ),\n    'Processed/'\n)\n",
 													"type": "Expression"
 												}
 											}
