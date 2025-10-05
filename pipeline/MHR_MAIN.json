@@ -225,7 +225,7 @@
 		"parameters": {
 			"PL_Start_DIRECTORY": {
 				"type": "string",
-				"defaultValue": "bronze/MHR/HIS_DATA/"
+				"defaultValue": "bronze/MHR/MHR_FILE_IN/"
 			},
 			"PL_Sink_SCHEMA": {
 				"type": "string",
