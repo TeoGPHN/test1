@@ -51,6 +51,26 @@
 			"type": "string",
 			"defaultValue": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
 		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Start_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/MHR/MHR_FILE_IN/"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Sink_SCHEMA": {
+			"type": "string",
+			"defaultValue": "GPHN"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_CSV_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/MHR/CSV/"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Processed_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/MHR/Processed/"
+		},
+		"trigger1_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -168,6 +188,21 @@
 					},
 					"Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope": {
 						"value": "[parameters('Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope')]"
+					},
+					"trigger1_properties_MHR_MAIN_parameters_PL_Start_DIRECTORY": {
+						"value": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_Start_DIRECTORY')]"
+					},
+					"trigger1_properties_MHR_MAIN_parameters_PL_Sink_SCHEMA": {
+						"value": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_Sink_SCHEMA')]"
+					},
+					"trigger1_properties_MHR_MAIN_parameters_PL_CSV_DIRECTORY": {
+						"value": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_CSV_DIRECTORY')]"
+					},
+					"trigger1_properties_MHR_MAIN_parameters_PL_Processed_DIRECTORY": {
+						"value": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_Processed_DIRECTORY')]"
+					},
+					"trigger1_properties_typeProperties_scope": {
+						"value": "[parameters('trigger1_properties_typeProperties_scope')]"
 					}
 				}
 			},

@@ -38,6 +38,21 @@
 		"Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope": {
 			"value": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
 		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Start_DIRECTORY": {
+			"value": "bronze/MHR/MHR_FILE_IN/"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Sink_SCHEMA": {
+			"value": "GPHN"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_CSV_DIRECTORY": {
+			"value": "bronze/MHR/CSV/"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Processed_DIRECTORY": {
+			"value": "bronze/MHR/Processed/"
+		},
+		"trigger1_properties_typeProperties_scope": {
+			"value": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
+		},
 		"containerUri": {
 			"value": ""
 		},

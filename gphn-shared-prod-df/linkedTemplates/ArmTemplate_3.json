@@ -22,6 +22,26 @@
 		"Trigger_Stakeholder_Engagement_upload_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Start_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/MHR/MHR_FILE_IN/"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Sink_SCHEMA": {
+			"type": "string",
+			"defaultValue": "GPHN"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_CSV_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/MHR/CSV/"
+		},
+		"trigger1_properties_MHR_MAIN_parameters_PL_Processed_DIRECTORY": {
+			"type": "string",
+			"defaultValue": "bronze/MHR/Processed/"
+		},
+		"trigger1_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001"
 		}
 	},
 	"variables": {
@@ -3090,6 +3110,41 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PHI_STAKEHOLDER_ENGAGEMENT_PIPE')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trigger1')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "MHR_MAIN",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"PL_Start_DIRECTORY": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_Start_DIRECTORY')]",
+							"PL_Sink_SCHEMA": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_Sink_SCHEMA')]",
+							"PL_CSV_DIRECTORY": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_CSV_DIRECTORY')]",
+							"PL_Processed_DIRECTORY": "[parameters('trigger1_properties_MHR_MAIN_parameters_PL_Processed_DIRECTORY')]"
+						}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/bronze/blobs/MHR/MHR_FILE_IN/",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('trigger1_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/MHR_MAIN')]"
 			]
 		}
 	]
