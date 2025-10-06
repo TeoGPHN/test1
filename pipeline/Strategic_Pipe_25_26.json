@@ -35,8 +35,6 @@
 			{
 				"name": "STAGING to 25_26",
 				"type": "SqlServerStoredProcedure",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "CSV to DATABASE",
