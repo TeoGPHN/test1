@@ -1,0 +1,17 @@
+{
+	"name": "trigger_test",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/bronze/blobs/STRATEGIC_DASHBOARD/",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/db72b11b-bf4e-4d6a-a0e4-b90fdae6783e/resourceGroups/gphn-lockbox-prod-rg/providers/Microsoft.Storage/storageAccounts/gphndlprod001",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
