@@ -52,7 +52,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[GPHN].[Create_GPHN_StrategicDashboard_2025_2026]]"
+					"storedProcedureName": "[GPHN].[Create_GPHN_StrategicDashboard_2025_2026]"
 				},
 				"linkedServiceName": {
 					"referenceName": "gphn_dw_prod_gpserverless",
