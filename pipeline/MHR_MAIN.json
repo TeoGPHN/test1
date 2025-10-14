@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get File Metadata",
+				"name": "Get File Metadata1",
 				"type": "GetMetadata",
 				"dependsOn": [],
 				"policy": {
@@ -43,7 +43,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Get File Metadata",
+						"activity": "Get File Metadata1",
 						"dependencyConditions": [
 							"Succeeded"
 						]
